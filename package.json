@@ -1,0 +1,25 @@
+{
+  "name": "-cyberpanel-stripe-intergration",
+  "version": "1.0.0",
+  "description": "This is a simple application that will host a Stripe webhook, this webhook will then setup a new customer on cyber panel automatically.",
+  "main": "/dist/app.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.2",
+    "stripe": "^8.201.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LainShot/-CyberPanel-Stripe-Intergration.git"
+  },
+  "author": "LainShot",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LainShot/-CyberPanel-Stripe-Intergration/issues"
+  },
+  "homepage": "https://github.com/LainShot/-CyberPanel-Stripe-Intergration#readme"
+}
