@@ -35,6 +35,7 @@
 import Stripe from 'stripe';
 import express from 'express';
 import env from 'dotenv';
+const axios = require('axios')
 
 env.config();
 
@@ -97,6 +98,14 @@ app.post(
       console.log(customer)
       console.log ("********************************")
       console.log("EMAIL: ",customer.email)
+      var firstName = customer.name.split(' ').slice(0, -1).join(' ');
+      var lastName = customer.name.split(' ').slice(-1).join(' ');
+      console.log("FIRST NAME: ",firstName)
+      console.log("LAST NAME: ",lastName)
+      console.log ("======================================================================")
+      //now over to the gen account function we go!
+      gen_user_acc(customer.email,firstName,lastName)
+
     } else if (event.type === 'charge.succeeded') {
       const charge = event.data.object as Stripe.Charge;
       console.log(`💵 Charge id: ${charge.id}`);
@@ -108,6 +117,41 @@ app.post(
     res.json({received: true});
   }
 );
+
+
+
+function gen_user_acc(email:string,firstname:string,lastname:string) {
+console.log("Stating account creation for: " +email)
+var username = email.split('@')  
+//lets build a random password I am sure some guy on stack overflow will love this...
+var p1 = Math.random().toString(36).slice(-8) + Math.random().toString(12).slice(-3)
+//now add another random start point to cut 8 chars out of that, and its good enough for me.
+var password = p1.substring(Math.floor(Math.random() * 8),8)
+console.log("Password Genrated....")
+console.log("Starting Web Request...")
+
+axios
+  .post(process.env.PANEL_URL + "/api/submitUserCreation", {
+    "adminUser": process.env.PANEL_ADMIN,
+    "adminPass": process.env.PANEL_PASSWORD,
+    "firstName": firstname,
+    "lastName": lastname,
+    "email": (email),
+    "userName": (username),
+    "password": (password),
+    "websitesLimit": 1,
+    "selectedACL": "user",
+    "securityLevel": "HIGH",
+  })
+  .then(res => {
+    console.log(`statusCode: ${res.status}`)
+    console.log(res)
+  })
+  .catch(error => {
+    console.error(error)
+  })
+
+}
 
 app.listen(80, (): void => {
   console.log('ONLINE ON PORT 80');
