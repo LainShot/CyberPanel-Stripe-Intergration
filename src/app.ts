@@ -32,71 +32,83 @@
  
 //================================================================================>
 
-//==============ENV======================//
-require('dotenv').config()
-//==============ENV======================//
-
-//IMPORTS==================================//
 import Stripe from 'stripe';
+import express from 'express';
+import env from 'dotenv';
+
+env.config();
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2020-08-27',
 });
-import express from 'express';
-import cors = require('cors');
-//IMPORTS==================================//
 
+const webhookSecret: string = process.env.ENDPOINT_SECRET;
 
-//APP BINDINGS==================================//
 const app = express();
-app.use(cors({ origin: true }));
-//APP BINDINGS==================================//
 
+// Use JSON parser for all non-webhook routes
+app.use(
+  (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ): void => {
+    if (req.originalUrl === '/webhook') {
+      next();
+    } else {
+      express.json()(req, res, next);
+    }
+  }
+);
 
+app.post(
+  '/webhook',
+  // Stripe requires the raw body to construct the event
+  express.raw({type: 'application/json'}),
+  async (req: express.Request, res: express.Response): Promise<void> => {
+    const sig = req.headers['stripe-signature'];
 
+    let event: Stripe.Event;
 
-
-app.post('/api/product1', async (req, res) => {
-    const sig = req.headers['stripe-signature'] as string;
-  
-  
-    const endpointSecret = process.env.ENDPOINT_SECRET;
-  
-    let event;
-  
     try {
-      event = stripe.webhooks.constructEvent(req.body.rawBody, sig, endpointSecret);
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
     } catch (err) {
-        //could not verify that this was sent via stripe so we send a 404!
-      res.status(400).end();
+      // On error, log and return the error message
+      console.log(`❌ Error message: ${err.message}`);
+      res.status(400).send(`Webhook Error: ${err.message}`);
       return;
     }
-    
-//right now we know it came from stripe lets work out what they want us to do with a switch.  
-    const intent = event.data.object;
-  
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        //OKAY SO THE PAYMENT IS DONE LETS SETUP THE CYBER PANEL
-        
-  
-        console.log("Succeeded:", intent.id);
-        break;
-      case 'payment_intent.payment_failed':
-        //oh the payment did not go to plan and failed :(
-        const message = intent.last_payment_error && intent.last_payment_error.message;
-        console.log('we have had a payment fail... :', intent.id, message);
-        break;
+
+    // Successfully constructed event
+    console.log('✅ Success:', event.id);
+
+    // Cast event data to Stripe object
+    if (event.type === 'payment_intent.succeeded') {
+      const stripeObject: Stripe.PaymentIntent = event.data
+        .object as Stripe.PaymentIntent;
+      console.log(`💰 PaymentIntent status: ${stripeObject.status}`);
+      console.log("=======================================================================================")
+      console.log("LOOKING UP INFO FOR THE FOLLOWING CUSTOMER ID, PLEASE WAIT..",stripeObject.customer)
+      //we set this as any as it does not know what is going to be populated. ie the email. 
+      const customer: any  = await stripe.customers.retrieve(stripeObject.customer.toString());
+      console.log("I FOUND THE FOLLOWING USER INFO FOR SETUP....")
+      console.log("=======================================================================================")
+      console.log ("********************************")
+      console.log(customer)
+      console.log ("********************************")
+      console.log("EMAIL: ",customer.email)
+    } else if (event.type === 'charge.succeeded') {
+      const charge = event.data.object as Stripe.Charge;
+      console.log(`💵 Charge id: ${charge.id}`);
+    } else {
+      console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
     }
-  
-    res.sendStatus(200);
-  });
-  app.get('/', (req, res) => {
-    //test page at root endpoint :)
-    res.send('<html><body><center><H1> -CyberPanel-Stripe-Intergration by LainShot is online... :) </H1> </center> </body> </html>')
-  })
 
+    // Return a response to acknowledge receipt of the event
+    res.json({received: true});
+  }
+);
 
-
-  app.listen(80, () => {
-    console.log(`-CyberPanel-Stripe-Intergration by LainShot is running... on port:${80}`)
-  })
+app.listen(80, (): void => {
+  console.log('ONLINE ON PORT 80');
+});
