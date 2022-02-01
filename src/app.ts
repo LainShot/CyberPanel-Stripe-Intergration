@@ -124,9 +124,9 @@ function gen_user_acc(email:string,firstname:string,lastname:string) {
 console.log("Stating account creation for: " +email)
 var username = email.split('@')  
 //lets build a random password I am sure some guy on stack overflow will love this...
-var p1 = Math.random().toString(36).slice(-8) + Math.random().toString(12).slice(-3)
+var p1 = Math.random().toString(36).slice(-24) + Math.random().toString(12).slice(-32)
 //now add another random start point to cut 8 chars out of that, and its good enough for me.
-var password = p1.substring(Math.floor(Math.random() * 8),8)
+var password = p1.substring(0,Math.random() * (12 - 8) + 8)
 console.log("Password Genrated....")
 console.log("Starting Web Request...")
 
