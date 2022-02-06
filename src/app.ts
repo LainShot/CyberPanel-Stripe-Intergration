@@ -153,6 +153,14 @@ axios
 
 }
 
+
+function send_email(email:string,username:string,password,string) {
+  //okay so the user is all setup so we should email them with all there info. 
+  console.log("email service starting.....")
+  console.log("SENDING EMAIL TO: " +email)
+  
+}
+
 app.listen(80, (): void => {
   console.log('ONLINE ON PORT 80');
 });
