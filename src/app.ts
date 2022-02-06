@@ -36,6 +36,7 @@ import Stripe from 'stripe';
 import express from 'express';
 import env from 'dotenv';
 const axios = require('axios')
+const nodemailer = require("nodemailer");
 
 env.config();
 
@@ -154,11 +155,33 @@ axios
 }
 
 
-function send_email(email:string,username:string,password,string) {
+async function send_email(email:string,username:string,password,string) {
   //okay so the user is all setup so we should email them with all there info. 
   console.log("email service starting.....")
   console.log("SENDING EMAIL TO: " +email)
-  
+
+  //now we start using node mailer.
+  let transporter = nodemailer.createTransport({
+    
+    //we will load a lot of this from env for sec reasons ofc :)
+    host: process.env.SMTP_HOST,
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER, 
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  let user_mail = await transporter.sendMail({
+    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    to: email, // list of receivers
+    subject: "Welcome user!", // Subject line
+    text: "Hello world?", // plain text body
+    html: "<b>Hello world?</b>", // html body
+  });
+  //now lets just log out that the mail has been send :).
+  console.log("Message sent: %s", user_mail.messageId);
 }
 
 app.listen(80, (): void => {
