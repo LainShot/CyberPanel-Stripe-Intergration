@@ -20,4 +20,27 @@ SMTP_USER=
 SMTP_PASSWORD=
 ```
 
+# Setup
+
+```
+Lets get this thing setup...
+
+apt install nodejs
+apt install npm
+npm install typescript -g
+npm install
+
+```
+
+# Compile and run!
+
+```
+# Now we need to compile and run
+
+npm run compile
+npm run start
+```
+
+
+
 
