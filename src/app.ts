@@ -32,19 +32,19 @@
 
 //================================================================================>
 
-import Stripe from "stripe";
-import express from "express";
-import env from "dotenv";
-const axios = require("axios");
-const nodemailer = require("nodemailer");
+import Stripe from "stripe"; //If you dont know what this is we have a problem.
+import express from "express"; //Hosts the endpoint for webhook.
+import env from "dotenv"; //Loads in our env file :
+const axios = require("axios"); //Used in order to send request to CyberPanel
+const nodemailer = require("nodemailer"); //This is used to send emails to the user.
 
-env.config();
+env.config(); //Start env
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2020-08-27",
 });
 
-const webhookSecret: string = process.env.ENDPOINT_SECRET;
+const webhookSecret: string = process.env.ENDPOINT_SECRET; //lets get this from the env.
 
 const app = express();
 
@@ -108,19 +108,20 @@ app.post(
       console.log(customer);
       console.log("********************************");
       console.log("EMAIL: ", customer.email);
-      var firstName = customer.name.split(" ").slice(0, -1).join(" ");
-      var lastName = customer.name.split(" ").slice(-1).join(" ");
+      var firstName = customer.name.split(" ").slice(0, -1).join(" "); //This is 🤮
+      var lastName = customer.name.split(" ").slice(-1).join(" "); //This is 🤮
       console.log("FIRST NAME: ", firstName);
       console.log("LAST NAME: ", lastName);
       console.log(
         "======================================================================"
       );
-      //now over to the gen account function we go!
-      gen_user_acc(customer.email, firstName, lastName);
+      //Everything has worked and go well lets create the account.
+      gen_user_acc(customer.email, firstName, lastName); //pass everything we need to make the acc.
     } else if (event.type === "charge.succeeded") {
       const charge = event.data.object as Stripe.Charge;
       console.log(`💵 Charge id: ${charge.id}`);
     } else {
+      //we dont know this event so lets deal with it and let the user know.
       console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
     }
 
@@ -132,16 +133,14 @@ app.post(
 function gen_user_acc(email: string, firstname: string, lastname: string) {
   console.log("Stating account creation for: " + email);
   var username = email.split("@")[0].toString(); //splits into array grab the bit we want and string it.
-  //lets build a random password I am sure some guy on stack overflow will love this...
   var p1 =
-    Math.random().toString(36).slice(-24) +
-    Math.random().toString(12).slice(-32);
-  //now add another random start point to cut 8 chars out of that, and its good enough for me.
+    Math.random().toString(36).slice(-24) + //lets build a random password I am sure some guy on stack overflow will love this...
+    Math.random().toString(12).slice(-32); //now add another random start point to cut 8 chars out of that, and its good enough for me.
   var password = p1.substring(0, Math.random() * (12 - 8) + 8);
   console.log("Password Genrated....");
   console.log("Starting Web Request...");
 
-  axios
+  axios //lets setup everythibg we want to send over to cyber panel.
     .post(process.env.PANEL_URL + "/api/submitUserCreation", {
       adminUser: process.env.PANEL_ADMIN,
       adminPass: process.env.PANEL_PASSWORD,
@@ -157,7 +156,7 @@ function gen_user_acc(email: string, firstname: string, lastname: string) {
     .then((res) => {
       console.log(`statusCode: ${res.status}`);
       console.log("USER HAS BEEN CREATED IN THE PANEL");
-      send_email(email, username, password);
+      send_email(email, username, password); //now lets go send a user the email with there login.
     })
     .catch((error) => {
       console.error(error);
@@ -166,7 +165,6 @@ function gen_user_acc(email: string, firstname: string, lastname: string) {
 }
 
 async function send_email(email: string, username: string, password: string) {
-  //okay so the user is all setup so we should email them with all there info.
   console.log("email service starting.....");
   console.log("SENDING EMAIL TO: " + email);
 
