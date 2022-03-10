@@ -1,47 +1,47 @@
 //================================================================================>
-//  _           _        _____ _           _   
- //| |         (_)      / ____| |         | |  
- //| |     __ _ _ _ __ | (___ | |__   ___ | |_ 
- //| |    / _` | | '_ \ \___ \| '_ \ / _ \| __|
- //| |___| (_| | | | | |____) | | | | (_) | |_ 
- //|______\__,_|_|_| |_|_____/|_| |_|\___/ \__|
+//  _           _        _____ _           _
+//| |         (_)      / ____| |         | |
+//| |     __ _ _ _ __ | (___ | |__   ___ | |_
+//| |    / _` | | '_ \ \___ \| '_ \ / _ \| __|
+//| |___| (_| | | | | |____) | | | | (_) | |_
+//|______\__,_|_|_| |_|_____/|_| |_|\___/ \__|
 //
- //       -CyberPanel-Stripe-Intergration-
+//       -CyberPanel-Stripe-Intergration-
 //
 // MIT License
 //
 // Copyright (c) 2022 LainShot
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
- //of this software and associated documentation files (the "Software"), to deal
- //in the Software without restriction, including without limitation the rights
- //to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- //copies of the Software, and to permit persons to whom the Software is
- //furnished to do so, subject to the following conditions:
- 
- //The above copyright notice and this permission notice shall be included in all
- //copies or substantial portions of the Software.
- 
- //THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- //IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- //FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- //AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- //LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- //SOFTWARE.
- 
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+
 //================================================================================>
 
-import Stripe from 'stripe';
-import express from 'express';
-import env from 'dotenv';
-const axios = require('axios')
+import Stripe from "stripe";
+import express from "express";
+import env from "dotenv";
+const axios = require("axios");
 const nodemailer = require("nodemailer");
 
 env.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2020-08-27',
+  apiVersion: "2020-08-27",
 });
 
 const webhookSecret: string = process.env.ENDPOINT_SECRET;
@@ -55,7 +55,7 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ): void => {
-    if (req.originalUrl === '/webhook') {
+    if (req.originalUrl === "/webhook") {
       next();
     } else {
       express.json()(req, res, next);
@@ -64,11 +64,11 @@ app.use(
 );
 
 app.post(
-  '/webhook',
+  "/webhook",
   // Stripe requires the raw body to construct the event
-  express.raw({type: 'application/json'}),
+  express.raw({ type: "application/json" }),
   async (req: express.Request, res: express.Response): Promise<void> => {
-    const sig = req.headers['stripe-signature'];
+    const sig = req.headers["stripe-signature"];
 
     let event: Stripe.Event;
 
@@ -82,32 +82,42 @@ app.post(
     }
 
     // Successfully constructed event
-    console.log('✅ Success:', event.id);
+    console.log("✅ Success:", event.id);
 
     // Cast event data to Stripe object
-    if (event.type === 'payment_intent.succeeded') {
+    if (event.type === "payment_intent.succeeded") {
       const stripeObject: Stripe.PaymentIntent = event.data
         .object as Stripe.PaymentIntent;
       console.log(`💰 PaymentIntent status: ${stripeObject.status}`);
-      console.log("=======================================================================================")
-      console.log("LOOKING UP INFO FOR THE FOLLOWING CUSTOMER ID, PLEASE WAIT..",stripeObject.customer)
-      //we set this as any as it does not know what is going to be populated. ie the email. 
-      const customer: any  = await stripe.customers.retrieve(stripeObject.customer.toString());
-      console.log("I FOUND THE FOLLOWING USER INFO FOR SETUP....")
-      console.log("=======================================================================================")
-      console.log ("********************************")
-      console.log(customer)
-      console.log ("********************************")
-      console.log("EMAIL: ",customer.email)
-      var firstName = customer.name.split(' ').slice(0, -1).join(' ');
-      var lastName = customer.name.split(' ').slice(-1).join(' ');
-      console.log("FIRST NAME: ",firstName)
-      console.log("LAST NAME: ",lastName)
-      console.log ("======================================================================")
+      console.log(
+        "======================================================================================="
+      );
+      console.log(
+        "LOOKING UP INFO FOR THE FOLLOWING CUSTOMER ID, PLEASE WAIT..",
+        stripeObject.customer
+      );
+      //we set this as any as it does not know what is going to be populated. ie the email.
+      const customer: any = await stripe.customers.retrieve(
+        stripeObject.customer.toString()
+      );
+      console.log("I FOUND THE FOLLOWING USER INFO FOR SETUP....");
+      console.log(
+        "======================================================================================="
+      );
+      console.log("********************************");
+      console.log(customer);
+      console.log("********************************");
+      console.log("EMAIL: ", customer.email);
+      var firstName = customer.name.split(" ").slice(0, -1).join(" ");
+      var lastName = customer.name.split(" ").slice(-1).join(" ");
+      console.log("FIRST NAME: ", firstName);
+      console.log("LAST NAME: ", lastName);
+      console.log(
+        "======================================================================"
+      );
       //now over to the gen account function we go!
-      gen_user_acc(customer.email,firstName,lastName)
-
-    } else if (event.type === 'charge.succeeded') {
+      gen_user_acc(customer.email, firstName, lastName);
+    } else if (event.type === "charge.succeeded") {
       const charge = event.data.object as Stripe.Charge;
       console.log(`💵 Charge id: ${charge.id}`);
     } else {
@@ -115,69 +125,65 @@ app.post(
     }
 
     // Return a response to acknowledge receipt of the event
-    res.json({received: true});
+    res.json({ received: true });
   }
 );
 
+function gen_user_acc(email: string, firstname: string, lastname: string) {
+  console.log("Stating account creation for: " + email);
+  var username = email.split("@")[0].toString(); //splits into array grab the bit we want and string it.
+  //lets build a random password I am sure some guy on stack overflow will love this...
+  var p1 =
+    Math.random().toString(36).slice(-24) +
+    Math.random().toString(12).slice(-32);
+  //now add another random start point to cut 8 chars out of that, and its good enough for me.
+  var password = p1.substring(0, Math.random() * (12 - 8) + 8);
+  console.log("Password Genrated....");
+  console.log("Starting Web Request...");
 
-
-function gen_user_acc(email:string,firstname:string,lastname:string) {
-console.log("Stating account creation for: " +email)
-var username = email.split('@')[0].toString()  //splits into array grab the bit we want and string it.
-//lets build a random password I am sure some guy on stack overflow will love this...
-var p1 = Math.random().toString(36).slice(-24) + Math.random().toString(12).slice(-32)
-//now add another random start point to cut 8 chars out of that, and its good enough for me.
-var password = p1.substring(0,Math.random() * (12 - 8) + 8)
-console.log("Password Genrated....")
-console.log("Starting Web Request...")
-
-axios
-  .post(process.env.PANEL_URL + "/api/submitUserCreation", {
-    "adminUser": process.env.PANEL_ADMIN,
-    "adminPass": process.env.PANEL_PASSWORD,
-    "firstName": firstname,
-    "lastName": lastname,
-    "email": (email),
-    "userName": (username),
-    "password": (password),
-    "websitesLimit": 1,
-    "selectedACL": "user",
-    "securityLevel": "HIGH",
-  })
-  .then(res => {
-    console.log(`statusCode: ${res.status}`)
-    console.log("USER HAS BEEN CREATED IN THE PANEL")
-    send_email(email,username,password)
-  })
-  .catch(error => {
-    console.error(error)
-    console.log("WE COULD NOT CREATE THE USER SEE THE ERROR ABOVE ^^")
-  })
-
+  axios
+    .post(process.env.PANEL_URL + "/api/submitUserCreation", {
+      adminUser: process.env.PANEL_ADMIN,
+      adminPass: process.env.PANEL_PASSWORD,
+      firstName: firstname,
+      lastName: lastname,
+      email: email,
+      userName: username,
+      password: password,
+      websitesLimit: 1,
+      selectedACL: "user",
+      securityLevel: "HIGH",
+    })
+    .then((res) => {
+      console.log(`statusCode: ${res.status}`);
+      console.log("USER HAS BEEN CREATED IN THE PANEL");
+      send_email(email, username, password);
+    })
+    .catch((error) => {
+      console.error(error);
+      console.log("WE COULD NOT CREATE THE USER SEE THE ERROR ABOVE ^^");
+    });
 }
 
-
-async function send_email(email:string,username:string,password:string) {
-  //okay so the user is all setup so we should email them with all there info. 
-  console.log("email service starting.....")
-  console.log("SENDING EMAIL TO: " +email)
+async function send_email(email: string, username: string, password: string) {
+  //okay so the user is all setup so we should email them with all there info.
+  console.log("email service starting.....");
+  console.log("SENDING EMAIL TO: " + email);
 
   //now we start using node mailer.
   let transporter = nodemailer.createTransport({
-    
     //we will load a lot of this from env for sec reasons ofc :)
     host: process.env.SMTP_HOST,
     port: 25,
     secure: false, // true for 465, false for other ports
-    tls: {rejectUnauthorized: false},
+    tls: { rejectUnauthorized: false },
     auth: {
-      user: process.env.SMTP_USER, 
+      user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
   });
-  
-  var username = email.split('@')[0].toString()  //splits into array grab the bit we want and string it.
 
+  var username = email.split("@")[0].toString(); //splits into array grab the bit we want and string it.
 
   let user_mail = await transporter.sendMail({
     from: `"PANEL LOGIN" <${process.env.SMTP_USER}>`, // sender address
@@ -191,5 +197,5 @@ async function send_email(email:string,username:string,password:string) {
 }
 
 app.listen(80, (): void => {
-  console.log('ONLINE ON PORT 80');
+  console.log("ONLINE ON PORT 80");
 });
