@@ -123,7 +123,7 @@ app.post(
 
 function gen_user_acc(email:string,firstname:string,lastname:string) {
 console.log("Stating account creation for: " +email)
-var username = email.split('@')  
+var username = email.split('@')[0].toString()  //splits into array grab the bit we want and string it.
 //lets build a random password I am sure some guy on stack overflow will love this...
 var p1 = Math.random().toString(36).slice(-24) + Math.random().toString(12).slice(-32)
 //now add another random start point to cut 8 chars out of that, and its good enough for me.
@@ -146,16 +146,18 @@ axios
   })
   .then(res => {
     console.log(`statusCode: ${res.status}`)
-    console.log(res)
+    console.log("USER HAS BEEN CREATED IN THE PANEL")
+    send_email(email,username,password)
   })
   .catch(error => {
     console.error(error)
+    console.log("WE COULD NOT CREATE THE USER SEE THE ERROR ABOVE ^^")
   })
 
 }
 
 
-async function send_email(email:string,username:string,password,string) {
+async function send_email(email:string,username:string,password:string) {
   //okay so the user is all setup so we should email them with all there info. 
   console.log("email service starting.....")
   console.log("SENDING EMAIL TO: " +email)
@@ -165,20 +167,24 @@ async function send_email(email:string,username:string,password,string) {
     
     //we will load a lot of this from env for sec reasons ofc :)
     host: process.env.SMTP_HOST,
-    port: 587,
+    port: 25,
     secure: false, // true for 465, false for other ports
+    tls: {rejectUnauthorized: false},
     auth: {
       user: process.env.SMTP_USER, 
       pass: process.env.SMTP_PASSWORD,
     },
   });
+  
+  var username = email.split('@')[0].toString()  //splits into array grab the bit we want and string it.
+
 
   let user_mail = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    from: `"PANEL LOGIN" <${process.env.SMTP_USER}>`, // sender address
     to: email, // list of receivers
     subject: "Welcome user!", // Subject line
-    text: "Hello world?", // plain text body
-    html: "<b>Hello world?</b>", // html body
+    text: `"WELCOME YOUR WEBHOSTING PANEL LOGIN HAS BEEN SETUP USER: ${username}  PASSWORD: ${password} FOLLOW THE LINK ON OUR HOMEPAGE IN ORDER TO LOGIN. THANKS`, // plain text body
+    html: `<center>Welcome <br> Your login for webhosting has been created! <br> In order to login go to our home page and follow the link to the panel and login with the following. <br> USER: ${username} <br> PASSWORD: ${password} <br> Thanks <br> The Systems Team</b></center>`, // html body
   });
   //now lets just log out that the mail has been send :).
   console.log("Message sent: %s", user_mail.messageId);
